@@ -1,20 +1,67 @@
-//You can edit ALL of the code here
+
+let allEpisodes;
+
 function setup() {
-  const allEpisodes = getAllEpisodes();
+  allEpisodes = getAllEpisodes();
   makePageForEpisodes(allEpisodes);
 }
 
-function makePageForEpisodes(episodeList) {
-  const rootElem = document.getElementById("root");
-  const numberOfEp = document.createElement("p");
-  numberOfEp.innerHTML = `Got ${episodeList.length} episode(s)`;
-  numberOfEp.classList.add("nrOfEp");
-  rootElem.appendChild(numberOfEp);
+//create root element
+const rootElem = document.getElementById("root");
 
+
+//creating the jumbotron 
+const jumbotron = document.createElement("div");
+rootElem.appendChild(jumbotron);
+jumbotron.classList.add("jumbotron");
+
+const mainHeading = document.createElement("h1");
+mainHeading.innerHTML = "Unlimited Movies, TV Shows and More";
+mainHeading.classList.add("mainHeading");
+jumbotron.appendChild(mainHeading);
+
+//creating the search bar 
+const search = document.createElement("input");
+search.setAttribute("type", "text");
+search.setAttribute("placeholder", "Search");
+search.classList.add("searchInput");
+rootElem.appendChild(search);
+
+//create number of episodes text
+let numberOfEp = document.createElement("p");
+numberOfEp.classList.add("nrOfEp");
+rootElem.appendChild(numberOfEp); 
+
+//create parent div for card episodes
+let episodes = document.createElement("div");
+episodes.setAttribute("class", "episodes");
+rootElem.appendChild(episodes);
+
+//event handler on keyup 
+function handleChange(e) {
+  let searchValue = e.target.value;
+  let filteredEpisodes = allEpisodes.filter( (episode) =>
+    episode.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+    episode.summary.toLowerCase().includes(searchValue.toLowerCase())
+  );
+  episodes.innerHTML ="";
+  numberOfEp.innerHTML ="";
+  makePageForEpisodes(filteredEpisodes);
+}
+
+search.addEventListener("keyup", handleChange);
+
+//displaying all the episodes' cards
+function makePageForEpisodes(episodeList) {
+  
+  //updating the number of the displayed episodes
+  numberOfEp.innerHTML = `Displaying ${episodeList.length}/${allEpisodes.length} episode(s)`;
+  
+  //iterating through the episodes in order to create the cards
   episodeList.map((episode) => {
     let card = document.createElement("div");
     card.classList.add("card");
-    rootElem.appendChild(card);
+    episodes.appendChild(card);
 
     let imageContainer = document.createElement("div");
     imageContainer.classList.add("imageDiv");
@@ -25,12 +72,10 @@ function makePageForEpisodes(episodeList) {
     image.classList.add("image");
     imageContainer.appendChild(image);
 
-
     let textContainer = document.createElement("div");
     textContainer.classList.add("textDiv");
     card.appendChild(textContainer);
 
-      
     let title = document.createElement("h3");
     title.innerHTML =`~ ${episode.name} ~`;
     title.classList.add("episodeName");
@@ -54,7 +99,18 @@ function makePageForEpisodes(episodeList) {
     let summary = document.createElement("div");
     summary.innerHTML = episode.summary;
     summary.classList.add("description");
-    textContainer.appendChild(summary)
+    textContainer.appendChild(summary);
+
+    let link = document.createElement("a");
+    link.setAttribute("href", episode.url);
+
+    let button = document.createElement("button");
+    button.classList.add("button");
+    button.innerHTML = "Watch"; 
+
+    textContainer.appendChild(link);
+    link.appendChild(button);
+    
   });
 }
 
@@ -79,6 +135,7 @@ document.body.appendChild(footer);
 let copyRight = document.createElement("p");
 footer.appendChild(copyRight);
 copyRight.innerHTML =
-  'The data originally comes from <a href="https://www.tvmaze.com/">TVMaze.com</a>';
+  "The data originally comes from <a href='https://www.tvmaze.com/'>TVMaze.com</a>";
 
-window.onload = setup;
+
+  window.onload = setup;
