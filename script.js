@@ -1,13 +1,14 @@
 
-let allEpisodes;
+let allEpisodes = getAllEpisodes();
 
 function setup() {
   allEpisodes = getAllEpisodes();
   makePageForEpisodes(allEpisodes);
 }
 
-//create root element
+// root element
 const rootElem = document.getElementById("root");
+
 
 
 //creating the jumbotron 
@@ -20,10 +21,47 @@ mainHeading.innerHTML = "Unlimited Movies, TV Shows and More";
 mainHeading.classList.add("mainHeading");
 jumbotron.appendChild(mainHeading);
 
+
+
+
+
+//creating the search bar by episode
+const searchByEpisode = document.createElement("select");
+searchByEpisode.classList.add("searchInput");
+rootElem.appendChild(searchByEpisode);
+
+const initialEmptyOption = document.createElement("option");
+initialEmptyOption.value = "";
+initialEmptyOption.innerHTML = "Show all episodes";
+searchByEpisode.appendChild(initialEmptyOption);
+
+allEpisodes.forEach(episode =>{
+  const optionEpisode = document.createElement("option");
+  optionEpisode.innerHTML = `${formatEpisodeAndSeason(episode.season, episode.number)} - ${episode.name}`;
+  optionEpisode.value = episode.name;
+  searchByEpisode.appendChild(optionEpisode);
+
+  optionEpisode.setAttribute("value", episode.name);
+})
+
+//event handler on change for select 
+function handleChangeOption (e) {
+  if (e.target.value == ""){
+    makePageForEpisodes(allEpisodes)
+  }else{
+    let filteredEpisode = allEpisodes.filter(episode => e.target.value == episode.name)
+    episodes.innerHTML ="";
+    numberOfEp.innerHTML ="";
+    makePageForEpisodes(filteredEpisode);
+  }
+}
+searchByEpisode.addEventListener("change", handleChangeOption);
+
+
 //creating the search bar 
 const search = document.createElement("input");
 search.setAttribute("type", "text");
-search.setAttribute("placeholder", "Search");
+search.setAttribute("placeholder", "Search by words");
 search.classList.add("searchInput");
 rootElem.appendChild(search);
 
@@ -37,8 +75,11 @@ let episodes = document.createElement("div");
 episodes.setAttribute("class", "episodes");
 rootElem.appendChild(episodes);
 
-//event handler on keyup 
-function handleChange(e) {
+
+
+
+//event handler on keyup - for search by words
+function handleChangeSearch(e) {
   let searchValue = e.target.value;
   let filteredEpisodes = allEpisodes.filter( (episode) =>
     episode.name.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -49,7 +90,9 @@ function handleChange(e) {
   makePageForEpisodes(filteredEpisodes);
 }
 
-search.addEventListener("keyup", handleChange);
+search.addEventListener("keyup", handleChangeSearch);
+
+
 
 //displaying all the episodes' cards
 function makePageForEpisodes(episodeList) {
