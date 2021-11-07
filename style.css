@@ -62,6 +62,12 @@ body{
   object-fit: cover;
 }
 
+.searchDiv{
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+}
+
 .episodeInfo{
   color: yellow;
   font-size: 18px;

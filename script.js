@@ -5,11 +5,27 @@ let allEpisodes;
 // root element
 const rootElem = document.getElementById("root");
 
+//creating the parent div for jumbotron
+const jumbotron = document.createElement("div");
+
+//create input & select and the parent div
+let searchDiv = document.createElement("div");
+searchDiv.classList.add("searchDiv");
+const searchShow = document.createElement("select");
+const searchByEpisode = document.createElement("select");
+const search = document.createElement("input");
+
+
 //create parent div for card episodes
-let episodes = document.createElement("div");
+let episodesDiv = document.createElement("div");
 
 //create number of episodes paragraph
 let numberOfEp = document.createElement("p");
+
+rootElem.appendChild(jumbotron);
+rootElem.appendChild(searchDiv);
+rootElem.appendChild(numberOfEp);
+rootElem.appendChild(episodesDiv);
 
 
 //get data from API
@@ -23,10 +39,11 @@ function setup() {
       throw `${response.status} ${response.statusText}`;
     })
     .then((data) => {
-      console.log(data)
       allEpisodes = data;
       makeJumbotron();
-      makeInputsToFilterEpisodes();
+      makeShowSelector();
+      makeEpisodeSelector(allEpisodes);
+      makeEpisodeSearch();
       makePageForEpisodes(allEpisodes);
       makeFooter();
     })
@@ -35,8 +52,6 @@ function setup() {
 
 //creating the jumbotron
 function makeJumbotron() {
-  const jumbotron = document.createElement("div");
-  rootElem.appendChild(jumbotron);
   jumbotron.classList.add("jumbotron");
 
   const mainHeading = document.createElement("h1");
@@ -46,20 +61,67 @@ function makeJumbotron() {
 }
 
 
+//creating the shows' select input
+function makeShowSelector(){
+  searchShow.classList.add("searchInput");
+  searchDiv.appendChild(searchShow);
+  searchShow.placeholder = "Select a show";
 
-//creating the search bar and episode selector 
-function makeInputsToFilterEpisodes() {
-  //1.creating the episode selector
-  const searchByEpisode = document.createElement("select");
+  const initialOptionShow = document.createElement("option");
+  initialOptionShow.value = "";
+  initialOptionShow.innerHTML = "Select a show";
+  searchShow.appendChild(initialOptionShow);
+
+  const allShows = getAllShows();
+
+  allShows.forEach((show) => {
+    const optionShow = document.createElement("option");
+    optionShow.innerHTML = `${show.name}`;
+    searchShow.appendChild(optionShow);
+    optionShow.setAttribute("value", show.name);
+  });
+
+  //event handler on change for select shows - display the proper episodes for each show
+  function handleChangeShowOption(e) {
+    let filteredShow = allShows.filter((show) => show.name === e.target.value);
+    if (e.target.value == "") {
+      episodesDiv.innerHTML = "";
+    } else {
+      fetch(`https://api.tvmaze.com/shows/${filteredShow[0].id}/episodes`)
+        .then((response) => {
+          if (response.status == 200) {
+            return response.json();
+          }
+          throw `${response.status} ${response.statusText}`;
+        })
+        .then((data) => {
+          allEpisodes = data;
+          episodesDiv.innerHTML = "";
+          searchByEpisode.innerHTML = "";
+          search.innerHTML = "";
+          makeEpisodeSelector(allEpisodes);
+          makeEpisodeSearch();
+          makePageForEpisodes(data);
+        })
+        .catch((error) => console.log(error));
+    }
+  }
+  searchShow.addEventListener("change", handleChangeShowOption);
+}
+
+
+
+//creating the episode selector
+function makeEpisodeSelector(episodes){
   searchByEpisode.classList.add("searchInput");
-  rootElem.appendChild(searchByEpisode);
+  searchDiv.appendChild(searchByEpisode);
 
   const initialEmptyOption = document.createElement("option");
   initialEmptyOption.value = "";
   initialEmptyOption.innerHTML = "Show all episodes";
   searchByEpisode.appendChild(initialEmptyOption);
 
-  allEpisodes.forEach((episode) => {
+  episodes.forEach((episode) => {
     const optionEpisode = document.createElement("option");
     optionEpisode.innerHTML = `${formatEpisodeAndSeason(
       episode.season,
@@ -70,28 +132,32 @@ function makeInputsToFilterEpisodes() {
     optionEpisode.setAttribute("value", episode.name);
   });
 
-  //event handler on change for select
-  function handleChangeOption(e) {
+  //event handler on change for select episodes
+  function handleChangeEpisodeOption(e) {
     if (e.target.value == "") {
-      episodes.innerHTML = "";
+      episodesDiv.innerHTML = "";
       makePageForEpisodes(allEpisodes);
     } else {
       let filteredEpisode = allEpisodes.filter(
         (episode) => e.target.value == episode.name
       );
-      episodes.innerHTML = "";
+      console.log("aaa", filteredEpisode);
+      episodesDiv.innerHTML = "";
       numberOfEp.innerHTML = "";
       makePageForEpisodes(filteredEpisode);
     }
   }
-  searchByEpisode.addEventListener("change", handleChangeOption);
+  searchByEpisode.addEventListener("change", handleChangeEpisodeOption);
+}
 
-  //2.creating the search bar
-  const search = document.createElement("input");
+
+
+//creating the search bar
+function makeEpisodeSearch(){
   search.setAttribute("type", "text");
   search.setAttribute("placeholder", "Search by words");
   search.classList.add("searchInput");
-  rootElem.appendChild(search);
+  searchDiv.appendChild(search);
 
   //event handler on keyup - for search by words
   function handleChangeSearch(e) {
@@ -101,7 +167,7 @@ function makeInputsToFilterEpisodes() {
         episode.name.toLowerCase().includes(searchValue.toLowerCase()) ||
         episode.summary.toLowerCase().includes(searchValue.toLowerCase())
     );
-    episodes.innerHTML = "";
+    episodesDiv.innerHTML = "";
     numberOfEp.innerHTML = "";
     makePageForEpisodes(filteredEpisodes);
   }
@@ -113,11 +179,9 @@ function makeInputsToFilterEpisodes() {
 function createNumberOfEpisodes(episodeList) {
   //number of episodes paragraph
   numberOfEp.classList.add("nrOfEp");
-  rootElem.appendChild(numberOfEp);
 
   //parent div for card episodes
-  episodes.setAttribute("class", "episodes");
-  rootElem.appendChild(episodes);
+  episodesDiv.setAttribute("class", "episodes");
 
   //updating the number of the displayed episodes
   numberOfEp.innerHTML = `Displaying ${episodeList.length}/${allEpisodes.length} episode(s)`;
@@ -128,7 +192,7 @@ function createAllEpisodes(episodeList) {
   episodeList.map((episode) => {
     let card = document.createElement("div");
     card.classList.add("card");
-    episodes.appendChild(card);
+    episodesDiv.appendChild(card);
 
     let imageContainer = document.createElement("div");
     imageContainer.classList.add("imageDiv");
@@ -217,4 +281,4 @@ function formatEpisodeAndSeason(season, episode) {
   return seasonNumber + episodeNumber;
 }
 
-window.onload = setup;
+window.onload = setup();
