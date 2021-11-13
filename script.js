@@ -15,9 +15,10 @@ const jumbotron = document.createElement("div");
 //create input & select and the parent div
 let searchDiv = document.createElement("div");
 searchDiv.classList.add("searchDiv");
-const searchShow = document.createElement("select");
-const searchByEpisode = document.createElement("select");
-const search = document.createElement("input");
+const selectShow = document.createElement("select");
+const selectEpisode = document.createElement("select");
+const searchEpisode = document.createElement("input");
+const searchShow = document.createElement("input");
 
 //create parent div for card episodes
 let episodesDiv = document.createElement("div");
@@ -71,40 +72,46 @@ function makeGoBackBtn (){
 
 //creating the shows' select input
 function makeShowSelector() {
-  searchShow.classList.add("searchInput");
-  searchDiv.appendChild(searchShow);
-  searchShow.placeholder = "All shows";
+  selectShow.classList.add("searchInput");
+  searchDiv.appendChild(selectShow);
+  selectShow.placeholder = "All shows";
 
   const initialOptionShow = document.createElement("option");
   initialOptionShow.value = "";
   initialOptionShow.innerHTML = "Select a show";
-  searchShow.appendChild(initialOptionShow);
+  selectShow.appendChild(initialOptionShow);
 
-  allShows.forEach((show) => {
+  const sortAllShows = allShows.sort((a, b) =>
+    a.name.localeCompare(b.name) // sorting the shows alphabetically 
+  );
+
+  sortAllShows.forEach((show) => {
     const optionShow = document.createElement("option");
     optionShow.innerHTML = `${show.name}`;
-    searchShow.appendChild(optionShow);
+    selectShow.appendChild(optionShow);
     optionShow.setAttribute("value", show.name);
   });
 
-  //event handler on change for select shows -
+    
+}
+
+//event handler on change for select shows -
   function handleChangeShowOption(e) {
     let showElement = document.getElementById(e.target.value)
-    console.log(showElement)
     showElement.scrollIntoView();
   }
-    searchShow.addEventListener("change", handleChangeShowOption);
-}
+
+  selectShow.addEventListener("change", handleChangeShowOption);
 
 //creating the episode selector
 function makeEpisodeSelector(episodes) {
-  searchByEpisode.classList.add("searchInput");
-  searchDiv.appendChild(searchByEpisode);
+  selectEpisode.classList.add("searchInput");
+  searchDiv.appendChild(selectEpisode);
 
   const initialEmptyOption = document.createElement("option");
   initialEmptyOption.value = "";
   initialEmptyOption.innerHTML = "Show all episodes";
-  searchByEpisode.appendChild(initialEmptyOption);
+  selectEpisode.appendChild(initialEmptyOption);
 
   episodes.forEach((episode) => {
     const optionEpisode = document.createElement("option");
@@ -113,11 +120,12 @@ function makeEpisodeSelector(episodes) {
       episode.number
     )} - ${episode.name}`;
     optionEpisode.value = episode.name;
-    searchByEpisode.appendChild(optionEpisode);
+    selectEpisode.appendChild(optionEpisode);
     optionEpisode.setAttribute("value", episode.name);
   });
+}
 
-  //event handler on change for select episodes
+//event handler on change for select episodes
   function handleChangeEpisodeOption(e) {
     if (e.target.value == "") {
       episodesDiv.innerHTML = "";
@@ -131,24 +139,24 @@ function makeEpisodeSelector(episodes) {
       makePageForEpisodes(filteredEpisode);
     }
   }
-  searchByEpisode.addEventListener("change", handleChangeEpisodeOption);
-}
+  selectEpisode.addEventListener("change", handleChangeEpisodeOption);
 
 //creating the search bar for episodes
 function makeEpisodeSearch() {
-  search.setAttribute("type", "text");
-  search.value = "";
-  search.setAttribute("placeholder", "Search by words");
-  search.classList.add("searchInput");
-  searchDiv.appendChild(search);
+  searchEpisode.setAttribute("type", "text");
+  searchEpisode.value = "";
+  searchEpisode.setAttribute("placeholder", "Search by words");
+  searchEpisode.classList.add("searchInput");
+  searchDiv.appendChild(searchEpisode);
+}
 
-  //event handler on keyup - for search by words
+//event handler on keyup - for search by words
   function handleChangeSearch(e) {
-    let searchValue = e.target.value;
+    let searchValue = e.target.value.toLowerCase();
     let filteredEpisodes = allEpisodes.filter(
       (episode) =>
-        episode.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-        episode.summary.toLowerCase().includes(searchValue.toLowerCase())
+        episode.name.toLowerCase().includes(searchValue) ||
+        episode.summary.toLowerCase().includes(searchValue) 
     );
     episodesDiv.innerHTML = "";
     numberOfEp.innerHTML = "";
@@ -156,33 +164,32 @@ function makeEpisodeSearch() {
     createNumberOfEpisodes(filteredEpisodes);
     makePageForEpisodes(filteredEpisodes);
   }
-  search.addEventListener("keyup", handleChangeSearch);
-}
+  searchEpisode.addEventListener("keyup", handleChangeSearch);
 
 
 //creating the search bar for shows
 function makeShowSearchShow() {
-  search.setAttribute("type", "text");
-  search.setAttribute("placeholder", "Search by words");
-  search.classList.add("searchInput");
-  searchDiv.appendChild(search);
+  searchShow.setAttribute("type", "text");
+  searchShow.setAttribute("placeholder", "Search shows");
+  searchShow.classList.add("searchInput");
+  searchDiv.appendChild(searchShow);
+}
 
-  //event handler on keyup - for search by words
+//event handler on keyup - for search by words
   function handleChangeSearchShow(e) {
-    let searchValue = e.target.value;
+    let searchValue = e.target.value.toLowerCase();
     let filteredShows = allShows.filter((show) => {
       return (
-        show.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-        show.summary.toLowerCase().includes(searchValue.toLowerCase())
+        show.name.toLowerCase().includes(searchValue) ||
+        show.summary.toLowerCase().includes(searchValue) ||
+        show.genres.find(gen => gen.toLowerCase().includes(searchValue))
       );
     });
-    console.log(filteredShows);
+
     showsDiv.innerHTML = "";
     createAllShows(filteredShows);
   }
-  search.addEventListener("keyup", handleChangeSearchShow);
-
-}
+  searchShow.addEventListener("keyup", handleChangeSearchShow);
 
 function createNumberOfEpisodes(episodeList) {
   //number of episodes paragraph
@@ -280,8 +287,8 @@ function headingHandler(e) {
       .then((data) => {
         allEpisodes = data;
         episodesDiv.innerHTML = "";
-        searchByEpisode.innerHTML = "";
-        search.innerHTML = "";
+        selectEpisode.innerHTML = "";
+        searchEpisode.innerHTML = "";
         searchDiv.innerHTML = "";
         showsDiv.innerHTML = "";
         makeGoBackBtn();
@@ -391,5 +398,4 @@ function formatEpisodeAndSeason(season, episode) {
   return seasonNumber + episodeNumber;
 }
 
-// window.onload = setup();
 window.onload = setupShowsPage();
